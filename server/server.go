@@ -9,7 +9,7 @@ import (
 
 func Start(recv_address *string, send_address *string) int {
 	received_data := make(chan string)
-	processed_data := make(chan string)
+	processed_data := make(chan uint64)
 	die := make(chan bool)
 
 	listener := StartReceiver(*recv_address, received_data)

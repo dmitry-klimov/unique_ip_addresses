@@ -8,35 +8,24 @@ import (
 	"time"
 )
 
-var processedData <-chan string = nil
+var processedData <-chan uint64 = nil
 
 func handleDataSendRequest(w http.ResponseWriter, r *http.Request) {
-	if strings.ToUpper(r.Method) == "POST" {
-		if err := r.ParseForm(); err == nil {
-			fmt.Println("Request is processed")
-		} else {
-			msg := fmt.Sprintf("Error during request handling: %s\n", err.Error())
-			log.Println(msg)
-			if i, e := fmt.Fprintf(w, msg); e != nil {
-				log.Printf("Error while sending answer, %d bytes sent, err: %s", i, e)
-			}
-			return
-		}
-	} else {
+	if strings.ToUpper(r.Method) == "GET" {
+		var lastValue uint64 = 0
 		for {
 			select {
-			case data := <-processedData:
-				if _, err := w.Write([]byte(data)); err != nil {
+			case lastValue = <-processedData:
+			case <-time.After(time.Millisecond * 5):
+				if _, err := w.Write([]byte(fmt.Sprintf("%d", lastValue))); err != nil {
 					log.Printf("Error while sending answer, err: %s", err)
 				}
-			case <-time.After(time.Millisecond * 5):
-				return
 			}
 		}
 	}
 }
 
-func StartSender(address string, processed_data <-chan string) *http.ServeMux {
+func StartSender(address string, processed_data <-chan uint64) *http.ServeMux {
 	processedData = processed_data
 	srv := http.NewServeMux()
 	srv.HandleFunc("/", handleDataSendRequest) // each request calls handler
