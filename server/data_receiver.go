@@ -12,7 +12,11 @@ var data_channel chan<- string = nil
 func handleDataReceiveRequest(w http.ResponseWriter, r *http.Request) {
 	if strings.ToUpper(r.Method) == "GET" {
 		fmt.Println("Request is processed")
-		data_channel <- "{ \"timestamp\": \"2020-06-24T15:27:00.123456Z\", \"ip\": \"83.150.59.250\", \"url\": ... }"
+		data := "{ \"timestamp\": \"2020-06-24T15:27:00.123456Z\", \"ip\": \"83.150.59.250\", \"url\": ... }"
+		data_channel <- data
+		if i, e := fmt.Fprintf(w, data); e != nil {
+			log.Printf("Error while sending answer, %d bytes sent, err: %s", i, e)
+		}
 	} else {
 		log.Printf("Wrong request")
 	}
